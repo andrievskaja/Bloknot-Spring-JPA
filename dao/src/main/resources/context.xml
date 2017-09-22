@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"       
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+       http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+       http://www.springframework.org/schema/jee 
+       http://www.springframework.org/schema/jee/spring-jee-4.0.xsd       
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+  
+    <context:component-scan base-package="com.andrievskaja.dao"/>
+    <context:property-placeholder location="classpath*:/WEB-INF/jdbc.properties"/>
+    <jpa:repositories base-package="com.andrievskaja.dao"/>
+    <jee:jndi-lookup id="dataSource" jndi-name="jdbc/hellobackendBD" expected-type="javax.sql.DataSource" default-ref="fallbackDataSource"/>
+       
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="packagesToScan">
+            <list>
+                <value>com.andrievskaja.business.model</value>
+            </list>
+        </property>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+            </props>
+        </property>
+    </bean>
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://localhost:3306/hellobackend?serverTimezone=UTC" />
+        <property name="username" value="lyuda" />
+        <property name="password" value="12345" />
+    </bean>
+    
+
+     
+    <jdbc:initialize-database data-source="dataSource" ignore-failures="ALL">
+        <jdbc:script execution="INIT" location="/WEB-INF/init_data.sql" encoding="UTF-8"/>
+    </jdbc:initialize-database>
+    
+    <tx:annotation-driven />
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+    </bean>
+    
+    <bean id="persistenceExceptionTranslationPostProcessor"
+          class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+</beans>

@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:p="http://www.springframework.org/schema/p"
+             xmlns:mvc="http://www.springframework.org/schema/mvc"
+             xmlns:aop="http://www.springframework.org/schema/aop"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/security
+       http://www.springframework.org/schema/security/spring-security.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+ 
+
+
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/fonts/**" location="/fonts/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    
+    <http pattern="/js/**" security="none"/>
+    <http pattern="/css/**" security="none"/>
+    <http pattern="/fonts/**" security="none"/>
+    <http pattern="/images/**" security="none"/>
+    <http pattern="/callback/**" security="none"/>
+    <http pattern="/registration" security="none"/>
+    <http pattern="/login" security="none"/>
+
+    <!--authentication-success-handler-ref="authenticationSuccessHandler" in form-login-->
+    <http pattern="/portal/user/**" use-expressions="true">
+        <intercept-url pattern="/portal/user/register" access="permitAll"/>
+        <intercept-url pattern="/portal/user/login" access="permitAll"/>
+        <intercept-url pattern="/portal/user/authorization_error" access="isAnonymous()"/>
+        <intercept-url pattern="/portal/admin/**" access="hasRole('ROLE_ADMIN')"/>
+        <intercept-url pattern="/portal/user/**"
+                       access="hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')"/>
+        <form-login
+            default-target-url="/portal/user"
+            login-page="/portal/user/login"
+            always-use-default-target="false"
+            login-processing-url="/portal/user/login"
+            authentication-failure-url="/portal/user/authorization_error"
+            username-parameter="email"
+            password-parameter="password"
+        />
+        <logout logout-url="/portal/user/logout" logout-success-url="/"/>
+        <csrf disabled="true"/>
+    </http>
+    <authentication-manager>
+        <authentication-provider user-service-ref="userDetailsService">
+            <password-encoder ref="passwordEncoder"/>
+        </authentication-provider>
+    </authentication-manager>
+    <!--
+
+-->    <beans:bean id="userDetailsService"
+                class="com.andrievskaja.business.service.impl.UserDetailsServiceImpl">
+    </beans:bean>
+    
+</beans:beans>
